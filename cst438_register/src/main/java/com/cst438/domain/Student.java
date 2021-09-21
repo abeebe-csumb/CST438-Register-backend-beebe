@@ -17,7 +17,11 @@ public class Student {
 	private String status;
 	
 	public Student() {
-		super();
+		this.student_id = 0;
+		this.name = null;
+		this.email = null;
+		this.statusCode = 0;
+		this.status = null;
 	}
 	
 	public int getStudent_id() {

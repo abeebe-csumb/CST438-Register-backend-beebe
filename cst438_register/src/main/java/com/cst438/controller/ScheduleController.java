@@ -50,8 +50,9 @@ public class ScheduleController {
 	public ScheduleDTO getSchedule( @RequestParam("year") int year, @RequestParam("semester") String semester ) {
 		
 		String student_email = "test@csumb.edu";   // student's email 
-		
+		System.out.println("here");
 		Student student = studentRepository.findByEmail(student_email);
+
 		if (student != null) {
 			List<Enrollment> enrollments = enrollmentRepository.findStudentSchedule(student_email, year, semester);
 			ScheduleDTO sched = createSchedule(year, semester, student, enrollments);

@@ -1,231 +1,121 @@
 package com.cst438;
 
-import static org.mockito.ArgumentMatchers.any;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertTrue;
-
-import java.util.Calendar;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.Test;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.boot.test.context.SpringBootTest;
 
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-
-import com.cst438.controller.ScheduleController;
 import com.cst438.domain.Course;
 import com.cst438.domain.CourseRepository;
 import com.cst438.domain.Enrollment;
 import com.cst438.domain.EnrollmentRepository;
-import com.cst438.domain.ScheduleDTO;
-import com.cst438.domain.Student;
-import com.cst438.domain.StudentRepository;
-import com.cst438.service.GradebookService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.springframework.test.context.ContextConfiguration;
-
-/* 
- * Example of using Junit with Mockito for mock objects
- *  the database repositories are mocked with test data.
- *  
- * Mockmvc is used to test a simulated REST call to the RestController
+/*
+ * This example shows how to use selenium testing using the web driver 
+ * with Chrome browser.
  * 
- * the http response and repository is verified.
- * 
- *   Note: This tests uses Junit 5.
- *  ContextConfiguration identifies the controller class to be tested
- *  addFilters=false turns off security.  (I could not get security to work in test environment.)
- *  WebMvcTest is needed for test environment to create Repository classes.
+ *  - Buttons, input, and anchor elements are located using XPATH expression.
+ *  - onClick( ) method is used with buttons and anchor tags.
+ *  - Input fields are located and sendKeys( ) method is used to enter test data.
+ *  - Spring Boot JPA is used to initialize, verify and reset the database before
+ *      and after testing.
  */
-@ContextConfiguration(classes = { ScheduleController.class })
-@AutoConfigureMockMvc(addFilters = false)
-@WebMvcTest
+
+@SpringBootTest
 public class JunitTestSchedule {
 
-	static final String URL = "http://localhost:8080";
+	public static final String CHROME_DRIVER_FILE_LOCATION = "C:/chromedriver_win32/chromedriver.exe";
+
+	public static final String URL = "http://localhost:3000";
+
+	public static final String TEST_USER_EMAIL = "test@csumb.edu";
+
 	public static final int TEST_COURSE_ID = 40442;
-	public static final String TEST_STUDENT_EMAIL = "test@csumb.edu";
-	public static final String TEST_STUDENT_NAME  = "test";
-	public static final int TEST_YEAR = 2021;
-	public static final String TEST_SEMESTER = "Fall";
 
-	@MockBean
-	CourseRepository courseRepository;
+	public static final String TEST_SEMESTER = "2021 Fall";
 
-	@MockBean
-	StudentRepository studentRepository;
-
-	@MockBean
-	EnrollmentRepository enrollmentRepository;
-
-	@MockBean
-	GradebookService gradebookService;
+	public static final int SLEEP_DURATION = 1000; // 1 second.
 
 	@Autowired
-	private MockMvc mvc;
+	EnrollmentRepository enrollmentRepository;
+
+	@Autowired
+	CourseRepository courseRepository;
 
 	@Test
-	public void addCourse()  throws Exception {
-		
-		MockHttpServletResponse response;
-		
-		Course course = new Course();
-		course.setCourse_id(TEST_COURSE_ID);
-		course.setSemester(TEST_SEMESTER);
-		course.setYear(TEST_YEAR);	
-		
-		// sets the start and end date of the course
-		Calendar c = Calendar.getInstance();
-		c.set(2021,  8,  16);
-		course.setStart(new java.sql.Date( c.getTimeInMillis() ));
-		c.set(2021,  12, 16);
-		course.setEnd(new java.sql.Date( c.getTimeInMillis() ));
-		
-		Student student = new Student();
-		student.setEmail(TEST_STUDENT_EMAIL);
-		student.setName(TEST_STUDENT_NAME);
-		student.setStatusCode(0);
-		student.setStudent_id(1);
-		
-		Enrollment enrollment = new Enrollment();
-		enrollment.setCourse(course);
-		enrollment.setEnrollment_id(1);
-		enrollment.setSemester(TEST_SEMESTER);
-		enrollment.setStudent(student);
-		enrollment.setYear(TEST_YEAR);
-		
-		List<Enrollment> enrollments = new java.util.ArrayList<>();
-		enrollments.add(enrollment);
-		
-		// given  -- stubs for database repositories that return test data
-	    given(courseRepository.findByCourse_id(TEST_COURSE_ID)).willReturn(course);
-	    given(studentRepository.findByEmail(TEST_STUDENT_EMAIL)).willReturn(student);
-	    given(enrollmentRepository.save(any(Enrollment.class))).willReturn(enrollment);
-	    given(enrollmentRepository.findStudentSchedule(TEST_STUDENT_EMAIL, TEST_YEAR, TEST_SEMESTER)).willReturn(enrollments);
-	  
-	    // create the DTO (data transfer object) for the course to add.  primary key course_id is 0.
-		ScheduleDTO.CourseDTO courseDTO = new ScheduleDTO.CourseDTO();
-		courseDTO.course_id = TEST_COURSE_ID;
-		
-		// then do an http post request with body of courseDTO as JSON
-		response = mvc.perform(
-				MockMvcRequestBuilders
-			      .post("/schedule")
-			      .content(asJsonString(courseDTO))
-			      .contentType(MediaType.APPLICATION_JSON)
-			      .accept(MediaType.APPLICATION_JSON))
-				.andReturn().getResponse();
-		
-		// verify that return status = OK (value 200) 
-		assertEquals(200, response.getStatus());
-		
-		// verify that returned data has non zero primary key
-		ScheduleDTO.CourseDTO result = fromJsonString(response.getContentAsString(), ScheduleDTO.CourseDTO.class);
-		assertNotEquals( 0  , result.id);
-		
-		// verify that repository save method was called.
-		verify(enrollmentRepository).save(any(Enrollment.class));
-		
-		// do http GET for student schedule 
-		response = mvc.perform(
-				MockMvcRequestBuilders
-			      .get("/schedule?year=" + TEST_YEAR + "&semester=" + TEST_SEMESTER)
-			      .accept(MediaType.APPLICATION_JSON))
-				.andReturn().getResponse();
-		
-		// verify that return status = OK (value 200) 
-		assertEquals(200, response.getStatus());
-		
-		// verify that returned data contains the added course 
-		ScheduleDTO scheduleDTO = fromJsonString(response.getContentAsString(), ScheduleDTO.class);
-		
-		boolean found = false;		
-		for (ScheduleDTO.CourseDTO sc : scheduleDTO.courses) {
-			if (sc.course_id == TEST_COURSE_ID) {
-				found = true;
-			}
-		}
-		assertTrue("Added course not in updated schedule.", found);
-		
-		// verify that repository find method was called.
-		verify(enrollmentRepository, times(1)).findStudentSchedule(TEST_STUDENT_EMAIL, TEST_YEAR, TEST_SEMESTER);
-	}
-	
-	@Test
-	public void dropCourse()  throws Exception {
-		
-		MockHttpServletResponse response;
-		
-		Course course = new Course();
-		course.setCourse_id(TEST_COURSE_ID);
-		course.setCourse_id(TEST_COURSE_ID);
-		course.setSemester(TEST_SEMESTER);
-		course.setYear(TEST_YEAR);	
-		
-		Calendar c = Calendar.getInstance();
-		c.set(2021,  8,  16);
-		course.setStart(new java.sql.Date( c.getTimeInMillis() ));  // course start date 8-16-2021
-		c.set(2021,  12, 16);
-		course.setEnd(new java.sql.Date( c.getTimeInMillis() ));
-		
-		Student student = new Student();
-		student.setEmail(TEST_STUDENT_EMAIL);
-		student.setName(TEST_STUDENT_NAME);
-		student.setStatusCode(0);
-		student.setStudent_id(1);
-		
-		Enrollment enrollment = new Enrollment();
-		enrollment.setCourse(course);
-		enrollment.setEnrollment_id(1);
-		enrollment.setSemester(TEST_SEMESTER);
-		enrollment.setStudent(student);
-		enrollment.setYear(TEST_YEAR);
-	
-		// given  -- stubs for database repositories that return test data
-	    given(enrollmentRepository.findById(1)).willReturn(enrollment);
-	    // note:  it is not necessary to create a mock for enrollmentRepository.delete.
-	    //   Because it is a method that has a void return type, Mockito will mock it automatically.
-	  
-		// then 
-		response = mvc.perform(
-				MockMvcRequestBuilders
-			      .delete("/schedule/1"))
-				.andReturn().getResponse();
-		
-		// verify that return status = OK (value 200) 
-		assertEquals(200, response.getStatus());
-	
-		// verify that repository delete method was called.
-		verify(enrollmentRepository).delete(any(Enrollment.class));
-	}
-		
-	private static String asJsonString(final Object obj) {
+	public void addCourseTest() throws Exception {
+
+		Enrollment x = null;
+		do {
+			x = enrollmentRepository.findByEmailAndCourseId(TEST_USER_EMAIL, TEST_COURSE_ID);
+			if (x != null)
+				enrollmentRepository.delete(x);
+		} while (x != null);
+
+		// set the driver location and start driver
+		//@formatter:off
+		// browser	property name 				Java Driver Class
+		// edge 	webdriver.edge.driver 		EdgeDriver
+		// FireFox 	webdriver.firefox.driver 	FirefoxDriver
+		// IE 		webdriver.ie.driver 		InternetExplorerDriver
+		//@formatter:on
+
+		System.setProperty("webdriver.chrome.driver", CHROME_DRIVER_FILE_LOCATION);
+		WebDriver driver = new ChromeDriver();
+		// Puts an Implicit wait for 10 seconds before throwing exception
+		driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
+
 		try {
 
-			return new ObjectMapper().writeValueAsString(obj);
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
+			driver.get(URL);
+			Thread.sleep(SLEEP_DURATION);
 
-	private static <T> T  fromJsonString(String str, Class<T> valueType ) {
-		try {
-			return new ObjectMapper().readValue(str, valueType);
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
+			// select the last of the radio buttons 
+			WebElement we = driver.findElement(By.xpath("(//input[@type='radio'])[last()]"));
+			we.click();
 
+			// Locate and click "Get Schedule" button
+			driver.findElement(By.xpath("//a")).click();
+			Thread.sleep(SLEEP_DURATION);
+
+			// Locate and click "Add Course" button
+			driver.findElement(By.xpath("//button")).click();
+			Thread.sleep(SLEEP_DURATION);
+
+			// enter course no 40442 and click "Add"
+			driver.findElement(By.xpath("//input[@name='course_id']")).sendKeys(Integer.toString(TEST_COURSE_ID));
+			driver.findElement(By.xpath("//button[span='Add']")).click();
+			Thread.sleep(SLEEP_DURATION);
+
+			// verify that new course shows in schedule.
+			Course course = courseRepository.findById(TEST_COURSE_ID).get();
+			we = driver.findElement(By.xpath("//div[@data-field='title' and @data-value='" + course.getTitle() + "']"));
+			assertNotNull(we, "Added course does not show in schedule.");
+
+			// verify that enrollment row has been inserted to database.
+			Enrollment e = enrollmentRepository.findByEmailAndCourseId(TEST_USER_EMAIL, TEST_COURSE_ID);
+			assertNotNull(e, "Course enrollment not found in database.");
+
+		} catch (Exception ex) {
+			throw ex;
+		} finally {
+
+			// clean up database.
+			Enrollment e = enrollmentRepository.findByEmailAndCourseId(TEST_USER_EMAIL, TEST_COURSE_ID);
+			if (e != null)
+				enrollmentRepository.delete(e);
+
+			driver.quit();
+		}
+
+	}
 }
