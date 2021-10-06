@@ -16,6 +16,7 @@ import com.cst438.domain.Student;
 import com.cst438.domain.StudentDTO;
 import com.cst438.domain.StudentRepository;
 
+//front end url
 @RestController
 @CrossOrigin(origins = "https://cst438-registrationfe-abeebe.herokuapp.com/")
 public class StudentController {
