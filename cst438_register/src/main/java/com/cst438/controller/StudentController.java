@@ -17,7 +17,7 @@ import com.cst438.domain.StudentDTO;
 import com.cst438.domain.StudentRepository;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "https://cst438registration-fe.herokuapp.com/")
 public class StudentController {
 	@Autowired
 	StudentRepository studentRepository;

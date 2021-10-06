@@ -26,7 +26,7 @@ import com.cst438.domain.StudentRepository;
 import com.cst438.service.GradebookService;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "https://cst438registration-fe.herokuapp.com/")
 public class ScheduleController {
 	
 	
