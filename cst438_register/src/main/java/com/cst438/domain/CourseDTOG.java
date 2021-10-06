@@ -13,5 +13,4 @@ public class CourseDTOG {
 	public int course_id;
 	public List<GradeDTO> grades;
 
-
 }

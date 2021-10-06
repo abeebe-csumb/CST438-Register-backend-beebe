@@ -5,12 +5,14 @@ public class EnrollmentDTO {
 	public String studentEmail;
 	public String studentName;
 	public int course_id;
+	public String course_grade;
 	
 	public EnrollmentDTO() {
 		this.id = 0;
 		this.studentEmail=null;
 		this.studentName=null;
 		this.course_id = 0;
+		this.course_grade=null;
 	}
 	
 	
@@ -21,6 +23,9 @@ public class EnrollmentDTO {
 		this.course_id = course_id;
 	}
 
+	public void setGrade(String grade) {
+		this.course_grade = grade;
+	}
 
 	@Override
 	public String toString() {

@@ -7,10 +7,14 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.cst438.domain.Course;
 import com.cst438.domain.CourseDTOG;
+import com.cst438.domain.CourseRepository;
 import com.cst438.domain.Enrollment;
 import com.cst438.domain.EnrollmentDTO;
 import com.cst438.domain.EnrollmentRepository;
+import com.cst438.domain.Student;
+import com.cst438.domain.StudentRepository;
 
 
 public class GradebookServiceMQ extends GradebookService {
@@ -22,8 +26,13 @@ public class GradebookServiceMQ extends GradebookService {
 	EnrollmentRepository enrollmentRepository;
 	
 	@Autowired
-	Queue gradebookQueue;
+	CourseRepository courseRepository;
 	
+	@Autowired
+	StudentRepository studentRepository;
+	
+	@Autowired
+	Queue gradebookQueue;
 	
 	public GradebookServiceMQ() {
 		System.out.println("MQ grade book service");
@@ -32,9 +41,17 @@ public class GradebookServiceMQ extends GradebookService {
 	// send message to grade book service about new student enrollment in course
 	@Override
 	public void enrollStudent(String student_email, String student_name, int course_id) {
-		 
-		//TODO  complete this method in homework 4
+
+        Course course  = courseRepository.findByCourse_id(course_id);
+        Student student = studentRepository.findByEmail(student_email);
+        
+        Enrollment e = new Enrollment();
+		e.setStudent(student);
+		e.setCourse(course);
 		
+        this.gradebookQueue = new Queue("gradebook-queue");
+        this.rabbitTemplate.convertAndSend(gradebookQueue.getName(), e);
+        System.out.println(" [x] Sent '" + e + "'");
 	}
 	
 	@RabbitListener(queues = "registration-queue")
@@ -44,7 +61,4 @@ public class GradebookServiceMQ extends GradebookService {
 		//TODO  complete this method in homework 4
 		
 	}
-	
-	
-
 }
