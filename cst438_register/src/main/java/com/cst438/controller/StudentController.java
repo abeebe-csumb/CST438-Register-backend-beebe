@@ -19,6 +19,7 @@ import com.cst438.domain.StudentRepository;
 //front end url
 @RestController
 @CrossOrigin(origins = "https://cst438-registrationfe-abeebe.herokuapp.com/")
+//@CrossOrigin(origins = "http://localhost:3000/")
 public class StudentController {
 	@Autowired
 	StudentRepository studentRepository;
@@ -37,7 +38,7 @@ public class StudentController {
 	}
 	
 	// add a new student to the system
-	@PostMapping("/student/addStudent")
+	@PostMapping("/student")
 	@Transactional
 	public Student addStudent( @RequestBody StudentDTO studentDTO ) { 
 		
