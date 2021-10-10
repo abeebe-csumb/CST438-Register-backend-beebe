@@ -19,8 +19,8 @@ public class EndToEndRegistrationTest {
 
 	public static final String CHROME_DRIVER_FILE_LOCATION = "/Users/abeebe/Documents/csumb/cst438/chromedriver";
 
-//	public static final String URL = "https://cst438-registrationfe-abeebe.herokuapp.com/";
-	public static final String URL = "http://localhost:3000/";
+	public static final String URL = "https://cst438-registrationfe-abeebe.herokuapp.com/";
+	//public static final String URL = "http://localhost:3000/";
 
 	public static final String TEST_USER_EMAIL = "test1@csumb.edu";
 
