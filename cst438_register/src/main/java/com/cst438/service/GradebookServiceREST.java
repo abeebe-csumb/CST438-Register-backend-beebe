@@ -7,8 +7,6 @@ import org.springframework.web.client.RestTemplate;
 import com.cst438.domain.Course;
 import com.cst438.domain.CourseRepository;
 import com.cst438.domain.Enrollment;
-import com.cst438.domain.EnrollmentDTO;
-import com.cst438.domain.EnrollmentRepository;
 import com.cst438.domain.Student;
 import com.cst438.domain.StudentRepository;
 
